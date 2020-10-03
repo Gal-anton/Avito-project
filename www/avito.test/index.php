@@ -1,11 +1,12 @@
 <?php
 session_start();
+require_once "src/RecordMonitor.php";
 if (isset($_POST['send']) === true) {
     $name   = htmlspecialchars($_POST['name']);
     $email  = htmlspecialchars($_POST['email']);
     $url    = htmlspecialchars($_POST['url']);
 
-    $record = new Record();
+    $record = new RecordMonitor($name, $email, $url);
     $record->save();
 
     $_SESSION['flash'] = 'Запись добавлена';
