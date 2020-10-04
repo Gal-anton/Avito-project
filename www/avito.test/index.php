@@ -6,9 +6,14 @@ if (isset($_POST['send']) === true) {
     $email  = htmlspecialchars($_POST['email']);
     $url    = htmlspecialchars($_POST['url']);
 
+    //testData
+    $name  = "Anton Galichin";
+    $email = "galichin-anton@yandex.ru";
+    $url   = "https://www.avito.ru/moskva/odezhda_obuv_aksessuary/svadebnoe_plae_1985661425";
+
     $record = new RecordMonitor($name, $email, $url);
     $record->save();
-
+    var_dump($record->getDBErrors());
     $_SESSION['flash'] = 'Запись добавлена';
     // обновление страницы
     header("Location: " . $_SERVER['REQUEST_URI']);
