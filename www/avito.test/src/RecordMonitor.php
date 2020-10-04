@@ -24,8 +24,8 @@ class RecordMonitor
      * @var
      */
     private $_idProduct;
-
     /**
+     * DB connection
      * @var mysqli
      */
     private $_link;
@@ -42,6 +42,10 @@ class RecordMonitor
         $this->_email     = $email;
     }
 
+    /**
+     * Save Client, Product adn relationship in DB
+     * @return bool
+     */
     public function save()
     {
         $this->_link = mysqli_connect(DB_HOST,DB_USER, DB_PASSWORD, DB_NAME);
@@ -57,6 +61,10 @@ class RecordMonitor
         return false;
     }
 
+    /**
+     * Save client into database
+     * @return mixed
+     */
     private function _saveClient()
     {
         $result = $this->_link->query("INSERT INTO `Client` (`name`, `email`) VALUE (" .
@@ -72,6 +80,10 @@ class RecordMonitor
         return $id;
     }
 
+    /**
+     * Save product into database
+     * @return mixed
+     */
     private function _saveProduct()
     {
         $price  = $this->getPriceById($this->_idProduct);
@@ -89,6 +101,12 @@ class RecordMonitor
         return $id;
     }
 
+    /**
+     * Save relationship between client and product into database
+     * @param $id_client
+     * @param $id_product
+     * @return false|mixed
+     */
     private function _saveFollowing($id_client, $id_product)
     {
         $result = $this->_link->query("INSERT INTO `Following` (`id_client`, `id_product`) VALUE (" .
@@ -122,6 +140,11 @@ class RecordMonitor
     }
 
 
+    /**
+     * Get price of product by its url
+     * @param $url
+     * @return bool|float
+     */
     public function getPriceByUrl($url) {
         $urlArray = explode("_", $url);
         $id_product = array_pop($urlArray);
@@ -131,6 +154,7 @@ class RecordMonitor
 
 
     /**
+     * Modify string to put into mysql query
      * @param $str string
      * @return string
      */
@@ -138,11 +162,28 @@ class RecordMonitor
         return "\"" . $this->_link->real_escape_string($str) . "\"";
     }
 
+    /**
+     * Get recent mysql errors
+     * @return array
+     */
     public function getDBErrors() {
         return $this->_link->error_list;
     }
 
+    /**
+     * Close connection before destruct
+     */
     public function __destruct() {
         return $this->_link->close();
     }
+
+
+    /**
+     * @return mixed
+     */
+    public function getIdProduct()
+    {
+        return $this->_idProduct;
+    }
+
 }

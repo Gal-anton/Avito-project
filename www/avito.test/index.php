@@ -1,23 +1,34 @@
 <?php
 session_start();
 require_once "src/RecordMonitor.php";
+require_once "src/AlertSender.php";
 if (isset($_POST['send']) === true) {
     $name   = htmlspecialchars($_POST['name']);
     $email  = htmlspecialchars($_POST['email']);
     $url    = htmlspecialchars($_POST['url']);
 
-    //testData
-    $name  = "Anton Galichin";
-    $email = "galichin-anton@yandex.ru";
-    $url   = "https://www.avito.ru/moskva/odezhda_obuv_aksessuary/svadebnoe_plae_1985661425";
+    if (empty(trim($name))  === false &&
+        empty(trim($email)) === false &&
+        empty(trim($url))  === false) {
 
-    $record = new RecordMonitor($name, $email, $url);
-    $record->save();
-    var_dump($record->getDBErrors());
-    $_SESSION['flash'] = 'Запись добавлена';
-    // обновление страницы
-    header("Location: " . $_SERVER['REQUEST_URI']);
-    exit();
+        //testData
+        $name = "Anton Galichin";
+        $email = "galichin-anton@yandex.ru";
+        $url = "https://www.avito.ru/moskva/odezhda_obuv_aksessuary/svadebnoe_plae_1985661425";
+
+        $record = new RecordMonitor($name, $email, $url);
+        $record->save();
+
+        $id_product = $record->getIdProduct();
+        $price = $record->getPriceByUrl($url);
+        $sender = new AlertSender();
+        $sender->send($name, $email, $id_product, $price);
+
+        $_SESSION['flash'] = 'Запись добавлена';
+        // обновление страницы
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit();
+    }
 }
 ?>
 <!doctype html>
