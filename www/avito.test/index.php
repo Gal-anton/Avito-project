@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once "src/RecordMonitor.php";
-require_once "src/AlertSender.php";
+require_once __DIR__ . "/src/RecordMonitor.php";
+require_once __DIR__ . "/src/AlertSender.php";
 if (isset($_POST['send']) === true) {
     $name   = htmlspecialchars($_POST['name']);
     $email  = htmlspecialchars($_POST['email']);
@@ -14,12 +14,12 @@ if (isset($_POST['send']) === true) {
         //testData
         $name = "Anton Galichin";
         $email = "galichin-anton@yandex.ru";
-        $url = "https://www.avito.ru/moskva/odezhda_obuv_aksessuary/svadebnoe_plae_1985661425";
+        $url = "https://www.avito.ru/moskva/kvartiry/2-k_kvartira_64_m_1114_et._1855572247";
 
         $record = new RecordMonitor($name, $email, $url);
         $record->save();
 
-        $id_product = $record->getIdProduct();
+        $id_product = $record->getIdProductFromUrl();
         $price = $record->getPriceByUrl($url);
         $sender = new AlertSender();
         $sender->send($name, $email, $id_product, $price);

@@ -2,3 +2,5 @@
 /docker
 /logs/*
 /mysql/*
+www/avito.test/vendor/
+www/avito.test/.phpunit.cache/*

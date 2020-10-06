@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
         libpng-dev \
         libzip-dev \
         msmtp \
+        cron \
     && pecl install mcrypt-1.0.3 \
     && docker-php-ext-install -j$(nproc) iconv mbstring mysqli pdo_mysql zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -26,8 +27,18 @@ RUN apt-get update && apt-get install -y \
 # Куда же без composer'а.
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug \
+    && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+    && echo "xdebug.remote_host = host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
+# Add crontab file in the cron directory
+ADD crontab /etc/cron.d/hello-cron
 
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/hello-cron\
+    && crontab /etc/cron.d/hello-cron \
+    && touch /var/log/cron.log
 
 # Добавим свой php.ini, можем в нем определять свои значения конфига
 #ADD php.ini /usr/local/etc/php/conf.d/40-custom.ini
@@ -35,13 +46,18 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 COPY php.ini $PHP_INI_DIR/php.ini
 COPY msmtprc /etc/msmtprc
 COPY msmtprc /root/.msmtprc
-RUN chown www-data /etc/msmtprc
-RUN chmod 600 /etc/msmtprc
-RUN chmod 600 /root/.msmtprc
+COPY ./entrypoint.sh /
+
+RUN chown www-data /etc/msmtprc \
+    && chmod 600 /etc/msmtprc \
+    && chmod 600 /root/.msmtprc \
+    && chmod +x /entrypoint.sh
+
 # Указываем рабочую директорию для PHP
 WORKDIR /var/www
 
 # Запускаем контейнер
 # Из документации: The main purpose of a CMD is to provide defaults for an executing container. These defaults can include an executable,
 # or they can omit the executable, in which case you must specify an ENTRYPOINT instruction as well.
+ENTRYPOINT /entrypoint.sh
 CMD ["php-fpm"]

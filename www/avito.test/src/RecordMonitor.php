@@ -1,6 +1,6 @@
 <?php
 
-require_once "db_config.php";
+require_once __DIR__ . "/../config/db_config.php";
 
 /**
  * Class RecordMonitor
@@ -17,29 +17,41 @@ class RecordMonitor
      * Client's email
      * @var string
      */
-    private $_email;
+    private string $_email;
 
     /**
      * Product identifier to monitor
-     * @var
+     * @var string
      */
-    private $_idProduct;
+    private $_idProductFromUrl;
     /**
      * DB connection
      * @var mysqli
      */
-    private $_link;
+    private mysqli $_link;
 
     /**
-     * @param string $name  Client's name
-     * @param string $email Client's email
-     * @param string $url   Url of advertisement to monitor
+     * @param null|string $name Client's name
+     * @param null|string $email Client's email
+     * @param null|string $url Url of advertisement to monitor
      */
-    public function __construct($name, $email, $url) {
-        $urlArray         = explode("_", $url);
-        $this->_idProduct = array_pop($urlArray);
-        $this->_name      = substr($name,0,50);
-        $this->_email     = $email;
+    public function __construct($name = null, $email = null, $url = null) {
+        if (is_null($name)  !== true &&
+            is_null($email) !== true &&
+            is_null($url)   !== true) {
+                $urlArray = explode("_", $url);
+                $this->_idProductFromUrl = array_pop($urlArray);
+                $this->_name = substr($name, 0, 50);
+                $this->_email = $email;
+        }
+
+    }
+
+    /**
+     * BD connection creation
+     */
+    public function createDBConnection() {
+        $this->_link = mysqli_connect(DB_HOST,DB_USER, DB_PASSWORD, DB_NAME);
     }
 
     /**
@@ -86,14 +98,14 @@ class RecordMonitor
      */
     private function _saveProduct()
     {
-        $price  = $this->getPriceById($this->_idProduct);
+        $price  = $this->getPriceById($this->_idProductFromUrl);
         $result = $this->_link->query("INSERT INTO `Product` (`id_from_url`, `price`) VALUE (" .
-                                    $this->_sqlStr($this->_idProduct) . "," .
+                                    $this->_sqlStr($this->_idProductFromUrl) . "," .
                                     $this->_sqlStr($price) . ")");
         $id = $this->_link->insert_id;
         if ($result === false) {
             $id = $this->_link->query("SELECT `id_product` FROM `Product` WHERE " .
-                                                "`id_from_url` = " . $this->_sqlStr($this->_idProduct));
+                                                "`id_from_url` = " . $this->_sqlStr($this->_idProductFromUrl));
             $row = $id->fetch_row();
             $id = array_pop($row);
         }
@@ -122,15 +134,22 @@ class RecordMonitor
      *
      * @return float|boolean
      */
-    public function getPriceById($id) {
+    public static function getPriceById(string $id) {
 
         if (is_numeric($id) === true) {
-            $filename = 'https://m.avito.ru/api/1/rmp/show/' . $id .
-                '?key=af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir';
-            $response = file_get_contents($filename);
+            $path = 'https://m.avito.ru/api/1/rmp/show/' . $id .
+                '?key=' . KEY_AVITO;
+            $ch = curl_init();
+            $timeout = 5;
+            curl_setopt ($ch, CURLOPT_URL, $path);
+            curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            //$response = file_get_contents($path);
 
             if ($response !== false) {
-                $response = (array)json_decode($response);
+                $response = (array) json_decode($response);
                 $result = (array)$response["result"];
                 $dfpTargetings = (array)$result["dfpTargetings"];
                 return $dfpTargetings["par_price"];
@@ -142,10 +161,10 @@ class RecordMonitor
 
     /**
      * Get price of product by its url
-     * @param $url
+     * @param $url string
      * @return bool|float
      */
-    public function getPriceByUrl($url) {
+    public function getPriceByUrl(string $url) {
         $urlArray = explode("_", $url);
         $id_product = array_pop($urlArray);
 
@@ -155,35 +174,77 @@ class RecordMonitor
 
     /**
      * Modify string to put into mysql query
-     * @param $str string
+     * @param $str string|integer
      * @return string
      */
-    private function _sqlStr($str) {
-        return "\"" . $this->_link->real_escape_string($str) . "\"";
-    }
+    private function _sqlStr($str)
+        {
+            if (is_null($str) !== true)
+                {
+                    return "\"" . $this->_link->real_escape_string($str) . "\"";
+                }
+            return null;
+        }
 
     /**
      * Get recent mysql errors
      * @return array
      */
-    public function getDBErrors() {
+    public function getDBErrors()
+    {
         return $this->_link->error_list;
     }
 
     /**
      * Close connection before destruct
      */
-    public function __destruct() {
-        return $this->_link->close();
-    }
+    public function __destruct()
+        {
+            return $this->_link->close();
+        }
 
 
     /**
      * @return mixed
      */
-    public function getIdProduct()
+    public function getIdProductFromUrl()
     {
-        return $this->_idProduct;
+        return $this->_idProductFromUrl;
     }
+
+
+    /**
+     * Get all products from DB
+     * @return array
+     */
+    public function getAllProducts()
+    {
+        $products = $this->_link->query("SELECT * FROM `Product`");
+        $productsArray = array();
+        while ($rowProduct = $products->fetch_assoc()) {
+            $productsArray[] = $rowProduct;
+        }
+
+        return $productsArray;
+    }
+
+
+    /**
+     * @param int|string $id_from_url
+     * @return array
+     */
+    public function getSubscribedClient($id_from_url)
+        {
+            $clients = $this->_link->query("SELECT * 
+                                        FROM `Client` JOIN Following F 
+                                            on Client.id_client = F.id_client 
+                                        WHERE F.id_product = " . $this->_sqlStr($id_from_url));
+            $clientsArray = array();
+            while ($rowClient = $clients->fetch_assoc()) {
+                $clientsArray[] = $rowClient;
+            }
+
+            return $clientsArray;
+        }
 
 }

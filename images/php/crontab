@@ -1,0 +1,1 @@
+*/30 * * * * root /usr/local/bin/php /var/www/avito.test/src/checkPrice.php
