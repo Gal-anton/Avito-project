@@ -4,18 +4,12 @@ require_once __DIR__ . "/config/db_config.php";
 require_once __DIR__ . "/src/RecordMonitor.php";
 require_once __DIR__ . "/src/AlertSender.php";
 if (isset($_POST['send']) === true) {
-    $name   = htmlspecialchars($_POST['name']);
+    $name   = (isset($_POST['name']) === true) ? htmlspecialchars($_POST['name']) : null;
     $email  = htmlspecialchars($_POST['email']);
     $url    = htmlspecialchars($_POST['url']);
 
-    if (empty(trim($name))  === false &&
-        empty(trim($email)) === false &&
+    if (empty(trim($email)) === false &&
         empty(trim($url))  === false) {
-
-        //testData
-        $name = "Anton Galichin";
-        $email = "galichin-anton@yandex.ru";
-        $url = "https://www.avito.ru/moskva/kvartiry/2-k_kvartira_64_m_1114_et._1855572247";
 
         $record = new RecordMonitor($name, $email, $url);
         $record->save();
@@ -53,7 +47,7 @@ if (isset($_POST['send']) === true) {
                 <form method="POST">
                     <div class="mb-3">
                         <label for="name" class="form-label">Имя</label>
-                        <input type="text" class="form-control" id="name" name="name" maxlength="50" required>
+                        <input type="text" class="form-control" id="name" name="name" maxlength="50">
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Адрес email</label>

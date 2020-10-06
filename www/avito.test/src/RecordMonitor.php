@@ -246,4 +246,17 @@ class RecordMonitor
             return $clientsArray;
         }
 
+    /**
+     * @param string|int $id_product
+     * @param string $id_from_url
+     * @param string|float $price
+     */
+    public function updateProduct($id_product, string $id_from_url, $price)
+    {
+        $this->_link->query("UPDATE `Product`
+                                   SET `id_from_url` = " . $this->_sqlStr($id_from_url) . "," .
+                                        "`price` = " . $this->_sqlStr($price) .
+                                        "WHERE `id_product` = " . $this->_sqlStr($id_product));
+    }
+
 }
