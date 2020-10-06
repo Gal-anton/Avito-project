@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: mysql
--- Время создания: Окт 02 2020 г., 18:27
+-- Время создания: Окт 06 2020 г., 20:06
 -- Версия сервера: 8.0.21
 -- Версия PHP: 7.4.9
 
@@ -32,8 +32,7 @@ USE `avito_test`;
 CREATE TABLE `Client` (
   `id_client` int NOT NULL,
   `name` varchar(50) DEFAULT NULL,
-  `email` varchar(100) NOT NULL,
-  `confirmed` tinyint(1) NOT NULL DEFAULT '0'
+  `email` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -56,8 +55,8 @@ CREATE TABLE `Following` (
 
 CREATE TABLE `Product` (
   `id_product` int NOT NULL,
-  `url` text NOT NULL,
-  `price` float NOT NULL
+  `id_from_url` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `price` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -68,13 +67,15 @@ CREATE TABLE `Product` (
 -- Индексы таблицы `Client`
 --
 ALTER TABLE `Client`
-  ADD PRIMARY KEY (`id_client`);
+  ADD PRIMARY KEY (`id_client`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Индексы таблицы `Following`
 --
 ALTER TABLE `Following`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `id_client_2` (`id_client`,`id_product`),
   ADD KEY `id_client` (`id_client`),
   ADD KEY `id_product` (`id_product`);
 
@@ -82,7 +83,8 @@ ALTER TABLE `Following`
 -- Индексы таблицы `Product`
 --
 ALTER TABLE `Product`
-  ADD PRIMARY KEY (`id_product`);
+  ADD PRIMARY KEY (`id_product`),
+  ADD UNIQUE KEY `id_url` (`id_from_url`);
 
 --
 -- AUTO_INCREMENT для сохранённых таблиц
