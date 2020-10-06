@@ -3,8 +3,8 @@ require_once __DIR__ . "/../config/db_config.php";
 require_once __DIR__ . "/../src/RecordMonitor.php";
 require_once __DIR__ . "/../src/AlertSender.php";
 
-$email = htmlspecialchars($_GET['email']);
-$url   = htmlspecialchars($_GET['url']);
+$email = (isset($_GET['email']) === true) ? htmlspecialchars($_GET['email']) : "";
+$url   = (isset($_GET['url']) === true) ? htmlspecialchars($_GET['url']) : "";
 
 if (empty(trim($email)) === false &&
     empty(trim($url))   === false) {
