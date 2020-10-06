@@ -109,3 +109,36 @@ foreach ($products as $product) {
 }
 ?>
 ```
+
+### Работа с БД (Представлен неизмененный вариант метода сохранения объявления в БД)
+```php
+<?php 
+/**
+ * Save product into database
+ * @return mixed
+ */
+private function _saveProduct()
+{
+//Получаем актуальную цену
+    $price  = $this->getPriceById($this->_idProductFromUrl);
+//Выполняем запрос к БД
+    $result = $this->_link->query("INSERT INTO `Product` (`id_from_url`, `price`) VALUE (" .
+                                $this->_sqlStr($this->_idProductFromUrl) . "," .
+                                $this->_sqlStr($price) . ")");
+//Получаем id последней сохраненной записи
+    $id = $this->_link->insert_id;
+    if ($result === false) { // если это объявление уже было загружено
+//то загружем его ID
+        $id = $this->_link->query("SELECT `id_product` FROM `Product` WHERE " .
+                                            "`id_from_url` = " . $this->_sqlStr($this->_idProductFromUrl));
+        $row = $id->fetch_row();
+        $id = array_pop($row);
+    }
+//Выводим ID
+    return $id;
+}
+?>
+```
+
+
+## Для изменения отправителя нужно править файл /images/php/msmtprs
