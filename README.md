@@ -31,4 +31,81 @@ Email: galichin-anton@yandex.ru
 которые подписаны на это объявление и им отправляется уведомление об изменении цены.
 
 Также доступна регистрация по ссылке: 
-#### http://avito.test:8000/scripts/register.php?email=YOUR_EMAIL&url=YOUR_URL
+#### http://avito.test:8000/scripts/register.php?email= YOUR_EMAIL&url=YOUR_URL
+
+## Примеры кода
+### Подписка на изменение цены
+
+```php
+<?php
+$email = (isset($_GET['email']) === true) ? htmlspecialchars($_GET['email']) : ""; //получаем данные
+$url   = (isset($_GET['url']) === true) ? htmlspecialchars($_GET['url']) : "";
+
+if (empty(trim($email)) === false && //проверяем на пустые строки
+    empty(trim($url))   === false) {
+
+    $record = new RecordMonitor(null, $email, $url); // отправляем обработчику данные
+    $record->save(); // сохраняем введенные данные
+
+//отправка первого уведомления об успешной подписке
+    $id_product = $record->getIdProductFromUrl(); 
+    $price = $record->getPriceByUrl($url);
+    $sender = new AlertSender();
+    $sender->send($email, $id_product, $price, null, true);
+}
+echo json_encode(array("status" => true)); //отправялем ответ клиенту
+?>
+```
+
+### Отслеживание изменений цены
+
+```php
+<?php 
+//Не получилось определить как формируется ключ, однако был актуален несколько дней пока тестировался.
+
+define('KEY_AVITO', 'af0deccbgcgidddjgnvljitntccdduijhdinfgjgfjir');
+$path = 'https://m.avito.ru/api/1/rmp/show/' . $id .   //формируем запрос к серверу, включающий ID объявления и ключ
+                '?key=' . KEY_AVITO;
+                //отправляем запрос серверу
+  $ch = curl_init();
+  $timeout = 5;
+  curl_setopt ($ch, CURLOPT_URL, $path);
+  curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+  $response = curl_exec($ch);
+  curl_close($ch);
+
+  if ($response !== false) { // если пришел ответ то парсим его как json объект(сразу приводим его к массиву для возможности обработки)
+      $response = (array) json_decode($response);
+      $result = (array)$response["result"];
+      $dfpTargetings = (array)$result["dfpTargetings"];
+      return $dfpTargetings["par_price"]; // возвращаем актуальную цену
+  }
+return false;
+            
+            
+?>
+```
+
+### Отправка уведомления на почту
+```php
+<?php 
+$recordMonitor = new RecordMonitor();   //Создаем экземпляр класса обработчика записей
+$recordMonitor->createDBConnection();   //Открываем соединение с БД
+$products = $recordMonitor->getAllProducts();  //Получаем массив всех объявлений
+foreach ($products as $product) {                                                 
+    $price = (string)$recordMonitor->getPriceById($product["id_from_url"]);  //Получаем актуальную цену
+    
+    if ($price != $product["price"]) { // в случае отклонения цены от записанной в БД:
+    // обновляем запись в БД
+        $recordMonitor->updateProduct($product["id_product"], $product["id_from_url"], $price); 
+        $clients = $recordMonitor->getSubscribedClient($product["id_from_url"]); //Получаем всех 
+            //пользователей которые следят за этим объявлением
+        
+        foreach ($clients as $client) { //Каждому отправляем письмо
+            AlertSender::send($client['email'], $client["id_from_url"], $price, $client['name']); 
+        }
+    }
+}
+?>
+```
