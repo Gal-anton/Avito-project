@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . "/config/db_config.php";
 require_once __DIR__ . "/src/RecordMonitor.php";
 require_once __DIR__ . "/src/AlertSender.php";
 if (isset($_POST['send']) === true) {
@@ -22,7 +23,7 @@ if (isset($_POST['send']) === true) {
         $id_product = $record->getIdProductFromUrl();
         $price = $record->getPriceByUrl($url);
         $sender = new AlertSender();
-        $sender->send($name, $email, $id_product, $price);
+        $sender->send($email, $id_product, $price, $name);
 
         $_SESSION['flash'] = 'Запись добавлена';
         // обновление страницы

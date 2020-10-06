@@ -12,9 +12,9 @@ class AlertSender
      * @param string $product
      * @param string $price
      */
-    public static function send($name, $email, $product, $price) {
-        $price = (is_null($price) === true) ? "Цена не указана" : $price;
-        $name = (empty($name) === true) ? "" : ", " . $name;
+    public static function send(string $email, string $product, string $price, $name = "") {
+        $price = self::checkPrice($price);
+        $name = self::checkName($name);
         $to      = $email;
         $subject = "Обновление цены";
         $message = ' <p>Здравствуйте' . $name . '!</p> </br>' .
@@ -23,9 +23,22 @@ class AlertSender
         $headers  = "Content-type: text/html; charset=utf-8 \r\n";
         $headers .= "From: AVITO ALERT <avito.test.galichin@gmail.com>\r\n";
         $headers .= "Reply-To: avito.test.galichin@gmail.com\r\n";
-        //print_r($to . "\n" . $subject . "\n" .  $message . "\n" .  $headers);
         mail($to, $subject, $message, $headers);
     }
 
+    /**
+     * @param $price
+     * @return string
+     */
+    private static function checkPrice($price)
+    {
+        return (is_null($price) === true) ? "Цена не указана" : $price;
+    }
+
+
+    private static function checkName($name)
+    {
+        return (empty($name) === true) ? "" : ", " . $name;
+    }
 
 }
