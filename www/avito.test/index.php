@@ -23,7 +23,7 @@ if (isset($_POST['send']) === true) {
         $id_product = $record->getIdProductFromUrl();
         $price = $record->getPriceByUrl($url);
         $sender = new AlertSender();
-        $sender->send($email, $id_product, $price, $name);
+        $sender->send($email, $id_product, $price, $name, true);
 
         $_SESSION['flash'] = 'Запись добавлена';
         // обновление страницы

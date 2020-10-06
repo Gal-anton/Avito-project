@@ -34,15 +34,13 @@ class RecordMonitor
      * @param null|string $url Url of advertisement to monitor
      */
     public function __construct($name = null, $email = null, $url = null) {
-        if (is_null($name)  !== true &&
-            is_null($email) !== true &&
+        if (is_null($email) !== true &&
             is_null($url)   !== true) {
                 $urlArray = explode("_", $url);
                 $this->_idProductFromUrl = array_pop($urlArray);
-                $this->_name = substr($name, 0, 50);
+                $this->_name = (is_null($name) === true) ? $name : substr($name, 0, 50);
                 $this->_email = $email;
         }
-
     }
 
     /**
@@ -60,7 +58,9 @@ class RecordMonitor
     {
         $this->_link = mysqli_connect(DB_HOST,DB_USER, DB_PASSWORD, DB_NAME);
         $id_client   = $this->_saveClient();
+        //var_dump($this);
         $id_product  = $this->_saveProduct();
+
 //        var_dump($id_client);
 //        var_dump($id_product);
         if ($id_client !== false && $id_product !== false) {
@@ -144,7 +144,8 @@ class RecordMonitor
             curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
             $response = curl_exec($ch);
             curl_close($ch);
-            //$response = file_get_contents($path);
+//            $response = file_get_contents($path);
+//            var_dump($response);
 
             if ($response !== false) {
                 $response = (array) json_decode($response);
@@ -179,7 +180,7 @@ class RecordMonitor
         {
             if (is_null($str) !== true)
                 {
-                    return "\"" . $this->_link->real_escape_string($str) . "\"";
+                    return "'" . $this->_link->real_escape_string($str) . "'";
                 }
             return null;
         }
@@ -198,7 +199,7 @@ class RecordMonitor
      */
     public function __destruct()
         {
-            return $this->_link->close();
+            return isset($this->_link) ? $this->_link->close() : true;
         }
 
 
