@@ -91,7 +91,7 @@ foreach ($products as $product) {
     if ($price != $product["price"]) { // в случае отклонения цены от записанной в БД:
     // обновляем запись в БД
         $recordMonitor->updateProduct($product["id_product"], $product["id_from_url"], $price); 
-        $clients = $recordMonitor->getSubscribedClient($product["id_from_url"]); //Получаем всех 
+        $clients = $recordMonitor->getSubscribedClient($product["id_product"]); //Получаем всех 
             //пользователей которые следят за этим объявлением
         
         foreach ($clients as $client) { //Каждому отправляем письмо
