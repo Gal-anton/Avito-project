@@ -15,7 +15,7 @@ class RecordMonitor
      * Client's email
      * @var string
      */
-    private string $_email;
+    private $_email;
 
     /**
      * Product identifier to monitor
@@ -36,10 +36,12 @@ class RecordMonitor
     public function __construct($name = null, $email = null, $url = null) {
         if (is_null($email) !== true &&
             is_null($url)   !== true) {
-                $urlArray = explode("_", $url);
-                $this->_idProductFromUrl = array_pop($urlArray);
-                $this->_name = (is_null($name) === true) ? $name : substr($name, 0, 50);
-                $this->_email = $email;
+
+            $urlArray = explode("_", $url);
+            $id = array_pop($urlArray);
+            $this->_idProductFromUrl = is_numeric($id) ? $id : null;
+            $this->_name = (is_null($name) === true) ? $name : substr($name, 0, 50);
+            $this->_email = $email;
         }
     }
 
@@ -78,12 +80,12 @@ class RecordMonitor
     private function _saveClient()
     {
         $result = $this->_link->query("INSERT INTO `Client` (`name`, `email`) VALUE (" .
-                                    $this->_sqlStr($this->_name) . "," .
-                                    $this->_sqlStr($this->_email) . ")");
+            $this->_sqlStr($this->_name) . "," .
+            $this->_sqlStr($this->_email) . ")");
         $id = $this->_link->insert_id;
         if ($result === false) {
             $id = $this->_link->query("SELECT `id_client` FROM `Client` WHERE " .
-                                            "`email` = " . $this->_sqlStr($this->_email));
+                "`email` = " . $this->_sqlStr($this->_email));
             $row = $id->fetch_row();
             $id = array_pop($row);
         }
@@ -98,12 +100,12 @@ class RecordMonitor
     {
         $price  = $this->getPriceById($this->_idProductFromUrl);
         $result = $this->_link->query("INSERT INTO `Product` (`id_from_url`, `price`) VALUE (" .
-                                    $this->_sqlStr($this->_idProductFromUrl) . "," .
-                                    $this->_sqlStr($price) . ")");
+            $this->_sqlStr($this->_idProductFromUrl) . "," .
+            $this->_sqlStr($price) . ")");
         $id = $this->_link->insert_id;
         if ($result === false) {
             $id = $this->_link->query("SELECT `id_product` FROM `Product` WHERE " .
-                                                "`id_from_url` = " . $this->_sqlStr($this->_idProductFromUrl));
+                "`id_from_url` = " . $this->_sqlStr($this->_idProductFromUrl));
             $row = $id->fetch_row();
             $id = array_pop($row);
         }
@@ -120,8 +122,8 @@ class RecordMonitor
     private function _saveFollowing($id_client, $id_product)
     {
         $result = $this->_link->query("INSERT INTO `Following` (`id_client`, `id_product`) VALUE (" .
-                                    $this->_sqlStr($id_client) . "," .
-                                    $this->_sqlStr($id_product) . ")");
+            $this->_sqlStr($id_client) . "," .
+            $this->_sqlStr($id_product) . ")");
         return ($result === false) ? false : $this->_link->insert_id;
     }
 
@@ -177,13 +179,13 @@ class RecordMonitor
      * @return string
      */
     private function _sqlStr($str)
+    {
+        if (is_null($str) !== true)
         {
-            if (is_null($str) !== true)
-                {
-                    return "'" . $this->_link->real_escape_string($str) . "'";
-                }
-            return null;
+            return "'" . $this->_link->real_escape_string($str) . "'";
         }
+        return null;
+    }
 
     /**
      * Get recent mysql errors
@@ -198,9 +200,9 @@ class RecordMonitor
      * Close connection before destruct
      */
     public function __destruct()
-        {
-            return isset($this->_link) ? $this->_link->close() : true;
-        }
+    {
+        return isset($this->_link) ? $this->_link->close() : true;
+    }
 
 
     /**
@@ -233,18 +235,18 @@ class RecordMonitor
      * @return array
      */
     public function getSubscribedClient($id_from_url)
-        {
-            $clients = $this->_link->query("SELECT * 
+    {
+        $clients = $this->_link->query("SELECT * 
                                         FROM `Client` JOIN Following F 
                                             on Client.id_client = F.id_client 
                                         WHERE F.id_product = " . $this->_sqlStr($id_from_url));
-            $clientsArray = array();
-            while ($rowClient = $clients->fetch_assoc()) {
-                $clientsArray[] = $rowClient;
-            }
-
-            return $clientsArray;
+        $clientsArray = array();
+        while ($rowClient = $clients->fetch_assoc()) {
+            $clientsArray[] = $rowClient;
         }
+
+        return $clientsArray;
+    }
 
     /**
      * @param string|int $id_product
@@ -255,8 +257,8 @@ class RecordMonitor
     {
         $this->_link->query("UPDATE `Product`
                                    SET `id_from_url` = " . $this->_sqlStr($id_from_url) . "," .
-                                        "`price` = " . $this->_sqlStr($price) .
-                                        "WHERE `id_product` = " . $this->_sqlStr($id_product));
+            "`price` = " . $this->_sqlStr($price) .
+            "WHERE `id_product` = " . $this->_sqlStr($id_product));
     }
 
 }

@@ -10,12 +10,17 @@ if (empty(trim($email)) === false &&
     empty(trim($url))   === false) {
 
     $record = new RecordMonitor(null, $email, $url);
-    $record->save();
 
-    $id_product = $record->getIdProductFromUrl();
-    $price = $record->getPriceByUrl($url);
-    $sender = new AlertSender();
-    $sender->send($email, $id_product, $price, null, true);
+    if(is_null($record->getIdProductFromUrl()) === false) {
+        $record->save();
+
+        $id_product = $record->getIdProductFromUrl();
+        $price = $record->getPriceByUrl($url);
+        $sender = new AlertSender();
+        $sender->send($email, $id_product, $price, null, true);
+        echo json_encode(array("status" => true));
+    } else {
+        echo json_encode(array("status" => false));
+    }
 }
-echo json_encode(array("status" => true));
 
