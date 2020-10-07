@@ -20,12 +20,16 @@ class AlertSender
         $subject = "Обновление цены";
         if ($firstAlert == false) {
             $message = ' <p>Здравствуйте' . $name . '!</p> </br>' .
-                '<b>Вы запршивали оповещение об изменениях цены объявления ' . $product . '</b> </br>' .
-                '<i>Актуальная стоимость: ' . $price . ' </i> </br>';
+                '<b>Вы запрашивали оповещение об изменениях цены объявления ' . $product . '</b> </br>' .
+                '<i>Актуальная стоимость: ' . $price . ' </i> </br>' .
+                '<p>Вы можете отписаться от всех рассылок по ' .
+                '<a href="//u91329.test-handyhost.ru/scripts/unsubscribe.php?email=' . $email . '">ссылке.</a> </p> </br>';
         } else {
             $message = ' <p>Здравствуйте' . $name . '!</p> </br>' .
                 '<b>Вы успешно подписаны на изменения цены в объявлении ' . $product . '</b> </br>' .
-                '<i>Актуальная стоимость: ' . $price . ' </i> </br>';
+                '<i>Актуальная стоимость: ' . $price . ' </i> </br>' .
+                '<p>Вы можете отписаться от всех рассылок по ' .
+                '<a href="//u91329.test-handyhost.ru/scripts/unsubscribe.php?email=' . $email . '">ссылке.</a> </p> </br>';
         }
         $headers  = "Content-type: text/html; charset=utf-8 \r\n";
         $headers .= "From: AVITO ALERT <avito.test.galichin@gmail.com>\r\n";

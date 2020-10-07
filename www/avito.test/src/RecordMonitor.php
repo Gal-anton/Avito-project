@@ -45,6 +45,12 @@ class RecordMonitor
         }
     }
 
+    public function deleteClient($email)
+    {
+        $this->_link->query("DELETE FROM `Client` " .
+            "WHERE `email` = " . $this->_sqlStr($email));
+    }
+
     /**
      * BD connection creation
      */
